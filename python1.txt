@@ -1,0 +1,438 @@
+D:\Biblioteca-Moon\python\titanic_data.csv
+D:\Biblioteca-Moon\python\aula2\ClientesBanco.csv
+
+1.0
+
+import pandas as pd
+import sys
+import os
+import plotly.express as px
+import plotly.graph_objects as go
+
+def choose_file():
+    global filepath
+    filepath = input('Enter filepath: ')    
+    assert os.path.exists(filepath), "I did not find the file at, " + str(filepath)
+    f = open(filepath, 'r+')
+    print("Hooray we found your file!")   
+    f.close()   
+
+def open_file():
+    global file
+    file = pd.read_csv(filepath, encoding='latin1', delimiter=',')  
+    print(file.columns)   
+
+def choose_columns():
+    global column_list
+    global file
+    column_list = []  
+    needs_items = True
+    while needs_items == True:   
+        user_input = input('Select the columns: ')
+        column_list.append(user_input)
+        for user_input in column_list:
+            print('- ' + user_input)   
+        answer = input("Add another item? (y/n)  ")
+        if answer == "n":
+            needs_items = False
+            print('Final list: ', column_list)
+    file = file[column_list] 
+    print(file)
+
+def build_graph():
+    global file
+    df = file[[column_list]].plot()
+    df.show()
+
+choose_file()
+open_file()
+choose_columns()
+build_graph()
+
+-----------------------------------------------------------------------------------------------------
+2.0
+
+import pandas as pd
+import sys
+import os
+import plotly.express as px
+import plotly.graph_objects as go
+
+def choose_file():
+    global filepath
+    filepath = input('Enter filepath: ')    
+    assert os.path.exists(filepath), "I did not find the file at, " + str(filepath)
+    f = open(filepath, 'r+')
+    print("Hooray we found your file!")   
+    f.close()   
+
+def open_file():
+    global file
+    file = pd.read_csv(filepath, encoding='latin1', delimiter=',')  
+    print(file.columns)   
+
+def choose_columns():
+    global column_list
+    global file
+    global res
+    column_list = []  
+    needs_items = True
+    while needs_items == True:   
+        user_input = input('Select the columns: ')
+        column_list.append(user_input)
+        for user_input in column_list:
+            print('- ' + user_input)   
+        answer = input("Add another item? (y/n)  ")
+        if answer == "n":
+            needs_items = False
+            print('Final list: ', column_list)
+    file = file[column_list] 
+    print(file)
+
+def extractDigits(lst):
+    return [[el] for el in lst]
+
+def build_graph():
+    for i in file:
+      df = file[[i]].count().plot()
+    print(df)
+    
+    
+choose_file()
+open_file()
+choose_columns()
+lst = column_list
+print(extractDigits(lst))
+df = file[[]].plot()
+print(df)
+
+----------------------------------------------------------------------------------------------------
+3.0
+
+import pandas as pd
+import sys
+import os
+import plotly.express as px
+import plotly.graph_objects as go
+
+def choose_file():
+    global filepath
+    filepath = input('Enter filepath: ')    
+    assert os.path.exists(filepath), "I did not find the file at, " + str(filepath)
+    f = open(filepath, 'r+')
+    print("Hooray we found your file!")   
+    f.close()   
+
+def open_file():
+    global file
+    file = pd.read_csv(filepath, encoding='latin1', header=0)  
+    print(file.columns)   
+
+def choose_columns():
+    global column_list
+    global file
+    column_list = []  
+    needs_items = True
+    while needs_items == True:   
+        user_input = input('Select the columns: ')
+        column_list.append(user_input)
+        for user_input in column_list:
+            print('- ' + user_input)   
+        answer = input("Add another item? (y/n)  ")
+        if answer == "n":
+            needs_items = False
+            print('Final list: ', column_list)
+    file = file[column_list] 
+    print(file.value_counts())
+
+
+def make_graph():
+    global file
+    fig = px.histogram(file, color=None)     
+    print(fig)                                                    
+    
+    
+choose_file()
+open_file()
+choose_columns()
+make_graph()
+-----------------------------------------------------------------------------------------------
+4.0
+
+import pandas as pd
+import sys
+import os
+import matplotlib.pyplot as plt
+import numpy as np
+
+filepath = input('Enter filepath: ')
+assert os.path.exists(filepath), "I did not find the file at, " + str(filepath)
+f = open(filepath, 'r+')
+print("Hooray we found your file!")
+f.close()
+
+tabela_vendas = pd.read_excel(filepath)
+
+#D:\Biblioteca-Moon\python\aula1\Vendas.xlsx
+
+tabela_faturamento = tabela_vendas[["ID Loja", "Valor Final"]].groupby("ID Loja").sum()   # agrupar por ID Loja e fazer a soma do valor final
+tabela_faturamento = tabela_faturamento.sort_values(by = "ID Loja", ascending= True) # a função sort_value vai ordenar em ordem alfabética ascendente (ascending = True)
+print(tabela_faturamento)
+
+tabela_quantidade = tabela_vendas[["ID Loja", "Quantidade"]].groupby("ID Loja").sum()  # groupby("nome da coluna") em sql group by, vai definir o indice para "ID Loja"
+print(tabela_quantidade)
+
+ticket_medio = (tabela_faturamento['Valor Final'] / tabela_quantidade['Quantidade']).to_frame()
+ticket_medio = ticket_medio.rename(columns={0:"Ticket Medio"}) # trocar nome da coluna '0' para Ticket Medio
+print(ticket_medio)
+
+---------------------------------------------------------------------------------------
+
+5.0 
+import dash
+import dash_core_components as dcc
+import dash_html_components as html
+import plotly.express as px
+import pandas as pd
+
+#http://127.0.0.1:8050/
+
+'''app = dash.Dash(__name__)
+
+
+app.layout = html.Div(children=[
+    html.H1(
+        'Hello Dash',
+        style = {'text-align':'center'}),
+    html.Div('Ola')
+    ]
+)'''
+
+app = dash.Dash(__name__)
+
+app.layout = html.Div([   #criar o layout geral 
+        html.H1('Hello Dash'),  #primeiro layer, Header 
+        html.Div([    #segundo layer
+            html.P('Teste 1'),  
+            html.P('Teste 2')
+            ]),
+        
+        dcc.Dropdown(   #vai adicionar uma lista dropdown dentro do layout
+    options=[
+        {'label': 'New York City', 'value': 'NYC'},
+        {'label': 'Montréal', 'value': 'MTL'},
+        {'label': 'San Francisco', 'value': 'SF'}
+    ],
+    value='SF'   #valor default (padrão)
+)    
+    ])
+
+---------------------------------------------------------------------------------
+6.0
+
+import pandas as pd
+import matplotlib.pyplot as plt
+import dataframe_image as dfi
+from tkinter import *
+from tkinter import filedialog
+
+#-------------------------------------------------------------
+
+# funçõe para criar e exportar as tabelas como png
+def graph_quantity():
+    df_styled1 = tabela_quantidade.style.background_gradient()
+    dfi.export(df_styled1,"quantidade.png")
+
+def graph_revenue():
+    df_styled2 = tabela_faturamento.style.background_gradient()
+    dfi.export(df_styled2,"faturamento.png")
+
+def graph_ticket():
+    df_styled3 = ticket_medio.style.background_gradient()
+    dfi.export(df_styled3,"ticket_medio.png")
+
+#função para começar o processo de criação de tabelas dataframe pandas 
+def start_proc():
+    global tabela_faturamento
+    global tabela_quantidade
+    global ticket_medio
+    tabela_faturamento = tabela_vendas[["ID Loja", "Valor Final"]].groupby("ID Loja").sum()   # agrupar por ID Loja e fazer a soma do valor final
+    tabela_faturamento = tabela_faturamento.sort_values(by = "ID Loja", ascending= True)
+
+    tabela_quantidade = tabela_vendas[["ID Loja", "Quantidade"]].groupby("ID Loja").sum().sort_values(by='Quantidade', ascending=False) 
+
+    ticket_medio = (tabela_faturamento['Valor Final'] / tabela_quantidade['Quantidade']).to_frame()
+    ticket_medio = ticket_medio.rename(columns={0:"Ticket Medio"})
+
+def fileopen():
+    global tabela_vendas
+    filepath = filedialog.askopenfilename(filetypes=(("xlsx", "*.xlsx"), ("all files", "*.*"))) #===assigns the path to filepath
+    label = Label(window, text=filepath) #==Adds Label to window 
+    label.pack()
+    label.place(x=200, y=80)
+    window.update()
+    tabela_vendas = pd.read_excel(filepath) #==reads the excel file by fetching it from its path
+
+#-------------------------------------------------------------------------------------
+#criar layout do aplicativo
+    
+window = Tk()
+window.title('File Explorer')
+window.config(background = "#a4dfd1")
+
+button_choose_file = Button(window, width = 20, text='Escolha o arquivo', command=fileopen)
+button_choose_file.pack()
+button_choose_file.place(x=200, y=50)
+
+button_start = Button(window, width = 10, text = "OK", command = start_proc)
+button_start.pack()
+button_start.place(x=250, y=120)
+
+
+#--------------------------------------------------------------------------------------
+# botão para exportar as tabelas pandas como imagens png 
+
+bt1 = Button(window, width = 20, text='graph_quantity', command=graph_quantity)
+bt1.place(x=200, y=400)
+
+bt2 = Button(window, width = 20, text='graph_revenue', command=graph_revenue)
+bt2.place(x=200, y=350)
+
+bt3 = Button(window, width = 20, text='graph_ticket', command=graph_ticket)
+bt3.place(x=200, y=300)
+
+window.geometry('500x500')
+window.mainloop()
+
+------------------------------------------------------------------------------------------------
+7.0
+
+import dash
+import dash_core_components as dcc
+import dash_html_components as html
+import plotly.express as px
+import pandas as pd
+from tkinter import *
+from tkinter import filedialog
+
+#http://127.0.0.1:8050/
+#D:\Biblioteca-Moon\python\aula2\ClientesBanco.csv
+
+window = TK()
+window.title('DashPLOT')  
+window.config(background = "#ffbb42") 
+window.geometry('500x500')
+
+
+app = dash.Dash(__name__)
+
+app.layout = html.Div([   #criar o layout geral 
+        html.H1('Hello Dash'),  #primeiro layer, Header 
+        html.Div([    #segundo layer
+            html.P('Teste 1'),  
+            html.P('Teste 2')
+            ]),
+
+        dcc.Dropdown(id = 'drop-down',
+        options=[
+            {'label': 'New York City', 'value': 'NYC'},
+            {'label': 'Montréal', 'value': 'MTL'},
+            {'label': 'San Francisco', 'value': 'SF'}
+        ],
+        multi = True,   #multiplos valores na lista dropdown
+        value='MTL'    #valor padrão
+        ),
+        
+        html.Div([  #terceiro layer
+            dcc.Graph(id ='my-graph', figure={}, className='six columns',  #criar grafico dentro do terceiro layer
+                config = {                                        #biblioteca de opções de configuração de grafico
+                    'staticPlot' : False,
+                    'scrollZoom' : True,
+                    'doubleClick' : 'reset',
+                    'showTips' : False,
+                    'displayModeBar' : True,
+                    'watermark' : False
+                })
+
+            ])
+        
+    ])
+
+
+
+if __name__ == '__main__':
+    app.run_server(debug=False)
+
+window.mainloop()
+
+--------------------------------------------------------------------------------------------------
+8.0
+
+import pandas as pd
+import plotly.express as px
+import dash
+import dash_core_components as dcc
+import dash_html_components as html
+from tkinter import *
+from tkinter import filedialog
+from dash.dependencies import Output, Input
+
+window = Tk()
+window.title('DashPLOT')  
+window.config(background = "#ffbb42") 
+window.geometry('500x500')
+
+
+
+def abrir_arquivo():
+    global tabela_vendas
+    filepath = filedialog.askopenfilename(filetypes=(("csv", "*.csv"), ("all files", "*.*"))) 
+    label = Label(window, text=filepath) 
+    label.pack()
+    label.place(x=200, y=80)
+    tabela_vendas = pd.read_csv(filepath)
+
+def start_server():
+    app = dash.Dash(__name__)
+    
+    fig_pie = px.pie(data_frame=tabela_vendas, names='ID Loja', values = 'Valor Final')
+    fig_hist = px.histogram(data_frame=tabela_vendas, x='ID Loja', y='Quantidade')
+    
+    app.layout = html.Div([   #criar o layout geral 
+        html.H1('Hello Dash', style={'color': 'red', 'fontSize': 40}),
+
+        dcc.Graph(id='grafico_pie',figure=fig_pie),
+
+        dcc.Dropdown(id='lojas',
+                     options =[{'label':x, 'value':x}
+                               for x in sorted(tabela_vendas['ID Loja'].unique())],
+                     value = 'Shopping Morumbi')
+        ])
+                                                 
+
+        
+    
+    @app.callback(
+    Output(component_id='grafico_pie', component_property='figure'),
+    Input(component_id='lojas', component_property='value')
+    )
+    def inter(value_genre):
+        print(value_genre)
+        return{}
+    
+    if __name__ == '__main__':
+        app.run_server(debug=False)
+
+bOpenFile = Button(window, text='Escolher arquivo', command=abrir_arquivo)
+bOpenFile.pack()
+bOpenFile.place(x=250, y=50)
+
+        
+bStartServer = Button(window, text='Começar servidor', command=start_server)
+bStartServer.pack()
+bStartServer.place(x=250, y=200)
+
+window.mainloop()
+
+
+

@@ -1,0 +1,741 @@
+import sqlite3
+from tkinter import *
+from tkinter import ttk
+from tkinter.messagebox import showinfo
+from datetime import datetime
+from datetime import timedelta
+import json
+
+
+#================================layout-TKinter==============================
+root = Tk()
+root.title('DashFATEC')  # título da janela
+root.geometry('1350x750')
+root.config(bg='#a4dfd1')
+
+date1 = datetime.today().strftime('%d-%m-%Y')
+date2 = datetime.today() + timedelta(days=7)
+date2 = date2.strftime('%d-%m-%Y')
+
+#if date2 == date1:
+#   bg='#a92323'
+
+#================================DATABASE===================================
+conn = sqlite3.connect('dados.db')
+c = conn.cursor()
+
+#CRIAÇÃO DA TABELA alunos
+c.execute("""CREATE TABLE IF NOT EXISTS alunos (
+            id_aluno int PRIMARY KEY,
+            nome text,
+            turma text
+            id_livro REFERENCES livros(id_livro)
+    )""")
+
+#CRIAÇÃO DA TABELA livros
+
+c.execute("""CREATE TABLE IF NOT EXISTS livros (
+            id_livro int PRIMARY KEY,
+            nome_livro text,
+            autor text
+    )""")
+
+
+
+conn.commit()
+conn.close()
+
+#================================FUNÇÕES====================================
+
+#FUNÇÃO PARA ADICIONAR NA DATABASE
+#VAI PRO botao_adicionar
+def adicionar():
+    conn = sqlite3.connect('dados.db')
+    c = conn.cursor()
+    c.execute('INSERT INTO alunos VALUES(:id_aluno, :nome, :turma, :id_livro)',
+            {
+               'id_aluno':entry_id_aluno.get(),
+               'nome':entry_nome.get(),
+               'turma':entry_turma.get(),
+               'id_livro':entry_id_livro.get()
+                })
+    c.execute("SELECR * FROM alunos")
+    records = c.fetchall()
+    
+    conn.commit()
+    conn.close()
+              
+    entry_id_aluno.delete(0, END)
+    entry_nome.delete(0, END)
+    entry_turma.delete(0, END)
+    entry_id_livro.delete(0, END)
+
+
+#FUNÇÃO PARA FAZER REGISTRO DE NOVOS LIVROS
+def registrar():
+    newWindow = Toplevel(root)
+    newWindow.title("Registro")
+    newWindow.geometry("300x300")
+
+    # entry
+    entry_id_livro = Entry(newWindow, width=30)
+    entry_id_livro.grid(row=0, column=1, padx=20)
+
+    entry_livro_nome = Entry(newWindow, width=30)
+    entry_livro_nome.grid(row=1, column=1)
+
+    entry_autor = Entry(newWindow, width=30)
+    entry_autor.grid(row=2, column=1)
+
+    # labels
+    lab_id_livro = Label(newWindow, text='ID do livro')
+    lab_id_livro.grid(row=0, column=0)
+
+    lab_livro_nome = Label(newWindow, text='Nome do livro')
+    lab_livro_nome.grid(row=1, column=0)
+
+    lab_autor = Label(newWindow, text='Autor')
+    lab_autor.grid(row=2, column=0)
+
+    def mostrar_dados():
+        conn = sqlite3.connect('dados.db')
+        c = conn.cursor()
+        c.execute('SELECT * FROM livros')
+        lista_livros = c.fetchall()
+        for livro in lista_livros:
+            tree.insert('', END, values=livro)
+        conn.commit()
+        conn.close()
+        
+        
+    
+    def query():
+        conn = sqlite3.connect('dados.db')
+        c = conn.cursor()
+        c.execute('INSERT INTO livros VALUES(:id_livro, :nome_livro, :autor)',
+                  {
+                      'id_livro': entry_id_livro.get(),
+                      'nome_livro': entry_livro_nome.get(),
+                      'autor': entry_autor.get()
+                  })
+        conn.commit()
+        conn.close()
+
+        entry_id_livro.delete(0, END)
+        entry_livro_nome.delete(0, END)
+        entry_autor.delete(0, END)
+
+    bt_query = Button(newWindow, text='OK', command=query)
+    bt_query.grid(row=3, column=1)
+
+    bt_mostrar_dados = Button(newWindow, text='Mostrar dados', command=mostrar_dados)
+    bt_mostrar_dados.grid(row=4, column=1)
+#================================FRAMES================================ 
+
+#MAINFRAME
+MainFrame = Frame(root)
+MainFrame.pack()
+MainFrame.config(bg='#a4dfd1')
+
+#FRAME DE TITULO
+FrameTitulo = Frame(MainFrame,
+                    bg='#cc6666',
+                    bd=10,
+                    width=1350,
+                    pady=20,
+                    relief = RIDGE)
+FrameTitulo.pack(side=TOP)
+
+Titulo = Label(FrameTitulo,
+               width=34,
+               text='Sistema de Biblioteca',
+               bg='#cc6666',
+               font=('arial', 47, 'bold'))
+Titulo.pack()
+
+#FRAME DE DETALHES DE EMPRÉSTIMOS (DADOS DE ALUNO E LIVRO)
+FrameDetalhe = Frame(MainFrame,
+                        bg='#a4dfd1',
+                        bd=10,
+                        width=1350,
+                        height=100,
+                        padx=20,
+                        relief = RIDGE)
+FrameDetalhe.pack(side=BOTTOM)
+
+#DATAFRAME
+DataFrame = Frame(MainFrame,
+                    bg='#a4dfd1',
+                    bd=10,
+                    width=1300,
+                    height=400,
+                    padx=20,
+                    relief = RIDGE)
+DataFrame.pack(side=BOTTOM)
+
+#DATAFRAME NA ESQUERDA (ONDE OS DADOS DOS ALUNOS SERÃO MOSTRADOS)
+DataFrameLEFT = LabelFrame(DataFrame,
+                            bg='#a4dfd1',
+                            bd=10,
+                            width=700,
+                            height=300,
+                            padx=20,
+                            relief = RIDGE,
+                            font=('arial', 12, 'bold'),
+                            text='Informação do Empréstimo')
+DataFrameLEFT.pack(side=LEFT)
+
+#DATAFRAME NA DIREITA (ONDE OS LIVROS VÃO SER MOSTRADOS)
+DataFrameRIGHT = LabelFrame(DataFrame,
+                            bg='#a4dfd1',
+                            bd=10,
+                            width=550,
+                            height=300,
+                            padx=20,
+                            relief = RIDGE,
+                            font=('arial', 12, 'bold'),
+                            text='Livros')
+DataFrameRIGHT.pack(side=RIGHT)
+
+#============================DATAFRAME_LEFT_ALUNOS================================ 
+
+#LABEL E ENTRY DE ID ALUNO
+label_id_aluno = Label(DataFrameLEFT,
+                       text='RA',
+                       font=('arial', 12, 'bold'),
+                       bg='#a4dfd1',
+                       padx=2,
+                       pady=2)
+label_id_aluno.pack()
+label_id_aluno.place(x=10,y=50)
+
+entry_id_aluno = Entry(DataFrameLEFT,
+                       font=('arial', 12, 'bold'))
+entry_id_aluno.pack()
+entry_id_aluno.place(x=140, y=50)
+
+#LABEL E ENTRY DE NOME ALUNO
+
+label_nome = Label(DataFrameLEFT,
+                       text='Nome do aluno',
+                       font=('arial', 12, 'bold'),
+                       bg='#a4dfd1',
+                       padx=2,
+                       pady=2)
+label_nome.pack()
+label_nome.place(x=10, y=100)
+
+entry_nome = Entry(DataFrameLEFT,
+                       font=('arial', 12, 'bold'))
+entry_nome.pack()
+entry_nome.place(x=140, y=100)
+
+
+#LABEL E ENTRY DE ALUNO TURMA
+
+label_turma = Label(DataFrameLEFT,
+                       text='Turma',
+                       font=('arial', 12, 'bold'),
+                       bg='#a4dfd1',
+                       padx=2,
+                       pady=2)
+label_turma.pack()
+label_turma.place(x=10, y=150)
+
+entry_turma = Entry(DataFrameLEFT,
+                       font=('arial', 12, 'bold'))
+entry_turma.pack()
+entry_turma.place(x=140, y=150)
+
+
+
+#================================DATAFRAME_LEFT_LIVROS================================
+
+#LABEL E ENTRY DE ID LIVRO
+label_id_livro = Label(DataFrameLEFT,
+                       text='ID do livro',
+                       font=('arial', 12, 'bold'),
+                       bg='#a4dfd1',
+                       padx=2,
+                       pady=2)
+label_id_livro.pack()
+label_id_livro.place(x=350, y=50)
+
+entry_id_livro = Entry(DataFrameLEFT,
+                       font=('arial', 12, 'bold'))
+entry_id_livro.pack()
+entry_id_livro.place(x=450, y=50)
+
+
+#================================DATAFRAME_RIGHT============================
+tree = ttk.Treeview(DataFrameRIGHT, show='headings')
+
+tree['columns'] = ('ID do livro', 'Nome do livro', 'Autor')
+
+tree.column('#0', width=0, stretch=0, anchor=CENTER)
+tree.column('ID do livro', anchor=CENTER, width=100)
+tree.column('Nome do livro', anchor=CENTER, width=250)
+tree.column('Autor', anchor=CENTER, width=150)
+
+tree.heading('#0', text='', anchor=CENTER)
+tree.heading('ID do livro', text='ID do livro', anchor=CENTER)
+tree.heading('Nome do livro', text='Nome do livro', anchor=CENTER)
+tree.heading('Autor', text='Autor', anchor=CENTER)
+
+tree.pack()
+
+#================================FRAME_DETALHE================================
+TextoDetalhe = Text(FrameDetalhe,
+                    font=('arial', 12, 'bold'),
+                    width=141,
+                    height=4,
+                    padx=2,
+                    pady=4)
+TextoDetalhe.grid(row=1, column=0)
+
+
+#================================FRAME_BOTAO==================================
+
+#BOTÃO PARA ADICIONAR REGISTRO DE EMPRÉSTIMO DE LIVRO POR ALUNO NO FRAME DETALHE
+botao_adicionar = Button(
+                         text='Adicionar',
+                         font=('arial', 20, 'bold'),
+                         width=15,
+                         bd=5,
+                         relief = RAISED,
+                         command=adicionar
+                         )
+botao_adicionar.pack()
+botao_adicionar.place(x=100, y=600)
+
+#BOTÃO PARA MOSTRAR DADOS DO FRAME DE DETALHE E NO FRAME RIGHT (LIVROS)
+botao_mostrar_dados = Button(
+                       text='Mostrar Dados',
+                       font=('arial', 20, 'bold'),
+                       width=15,
+                       bd=5,
+                       relief = RAISED
+                         )
+botao_mostrar_dados.pack()
+botao_mostrar_dados.place(x=400, y=600)
+
+
+#BOTÃO PARA REGISTRAR NOVOS LIVROS NA DATABASE
+botao_registrar = Button(
+                         text='Registrar',
+                         font=('arial', 20, 'bold'),
+                         width=15,
+                         bd=5,
+                         relief = RAISED,
+                         command=registrar
+                         )
+botao_registrar.pack()
+botao_registrar.place(x=700, y=600)
+
+
+#BOTÃO PARA DELETAR LINHAS
+botao_deletar = Button(
+                       text='Deletar',
+                       font=('arial', 20, 'bold'),
+                       width=15,
+                       bd=5,
+                       relief = RAISED
+                         )
+botao_deletar.pack()
+botao_deletar.place(x=1000, y=600)
+
+root.mainloop()
+
+
+================================================================================================
+2.0
+import sqlite3
+from tkinter import *
+from tkinter import ttk
+from tkinter.messagebox import showinfo
+from datetime import datetime
+from datetime import timedelta
+import json
+
+
+#================================layout-TKinter==============================
+root = Tk()
+root.title('DashFATEC')  # título da janela
+root.geometry('1350x750')
+root.config(bg='#a4dfd1')
+
+date1 = datetime.today().strftime('%d-%m-%Y')
+date2 = datetime.today() + timedelta(days=7)
+date2 = date2.strftime('%d-%m-%Y')
+
+#if date2 == date1:
+#   bg='#a92323'
+
+#================================DATABASE===================================
+conn = sqlite3.connect('dados.db')
+c = conn.cursor()
+
+#CRIAÇÃO DA TABELA alunos
+c.execute("""CREATE TABLE IF NOT EXISTS alunos (
+            id_aluno int PRIMARY KEY,
+            nome text,
+            turma text
+            id_livro REFERENCES livros(id_livro)
+    )""")
+
+#CRIAÇÃO DA TABELA livros
+
+c.execute("""CREATE TABLE IF NOT EXISTS livros (
+            id_livro int PRIMARY KEY,
+            nome_livro text,
+            autor text
+    )""")
+
+
+
+conn.commit()
+conn.close()
+
+#================================FUNÇÕES====================================
+
+#FUNÇÃO PARA ADICIONAR NA DATABASE
+#VAI PRO botao_adicionar
+def adicionar():
+    conn = sqlite3.connect('dados.db')
+    c = conn.cursor()
+    c.execute('INSERT INTO alunos VALUES(:id_aluno, :nome, :turma, :id_livro)',
+            {
+               'id_aluno':entry_id_aluno.get(),
+               'nome':entry_nome.get(),
+               'turma':entry_turma.get(),
+               'id_livro':entry_id_livro.get()
+                })
+    c.execute("SELECT * FROM alunos")
+    c.execute("SELECT nome_livro FROM livros where livros.id_livro = alunos.id_livro")
+    records = c.fetchall()
+    TextoDetalhe.insert(END, '\t\t' + entry_id_aluno.get() +
+                             '\t\t' + entry_nome.get() +
+                             '\t\t' + entry_turma.get() +
+                             '\t\t' + entry_livro_nome)
+    
+    conn.commit()
+    conn.close()
+              
+    entry_id_aluno.delete(0, END)
+    entry_nome.delete(0, END)
+    entry_turma.delete(0, END)
+    entry_id_livro.delete(0, END)
+
+#MOSTRAR DADOS DOS ALUNOS E LIVROS DATAFRAME DETALHE E RIGHT
+def mostrar_dados():
+    #resetar a tabela pra não mostrar valores duplicados
+    tree.delete(*tree.get_children())   
+    conn = sqlite3.connect('dados.db')
+    c = conn.cursor()
+    c.execute('SELECT * FROM livros GROUP BY id_livro')
+    lista_livros = c.fetchall()
+    #loop para pegar todos os livros da database e inserir na tabela
+    for livro in lista_livros:
+        tree.insert('', END, values=livro)
+    conn.commit()
+    conn.close()
+
+#FUNÇÃO PARA FAZER REGISTRO DE NOVOS LIVROS
+def registrar():
+    newWindow = Toplevel(root)
+    newWindow.title("Registro")
+    newWindow.geometry("300x300")
+
+    # entry
+    entry_id_livro = Entry(newWindow, width=30)
+    entry_id_livro.grid(row=0, column=1, padx=20)
+
+    entry_livro_nome= Entry(newWindow, width=30)
+    entry_livro_nome.grid(row=1, column=1)
+
+    entry_autor = Entry(newWindow, width=30)
+    entry_autor.grid(row=2, column=1)
+
+    # labels
+    lab_id_livro = Label(newWindow, text='ID do livro')
+    lab_id_livro.grid(row=0, column=0)
+
+    lab_livro_nome = Label(newWindow, text='Nome do livro')
+    lab_livro_nome.grid(row=1, column=0)
+
+    lab_autor = Label(newWindow, text='Autor')
+    lab_autor.grid(row=2, column=0)
+
+    
+    def query_registrar():
+        conn = sqlite3.connect('dados.db')
+        c = conn.cursor()
+        c.execute('INSERT INTO livros VALUES(:id_livro, :nome_livro, :autor)',
+                  {
+                      'id_livro': entry_id_livro.get(),
+                      'nome_livro': entry_livro_nome.get(),
+                      'autor': entry_autor.get()
+                  })
+        conn.commit()
+        conn.close()
+
+        entry_id_livro.delete(0, END)
+        entry_livro_nome.delete(0, END)
+        entry_autor.delete(0, END)
+
+    bt_query_registrar = Button(newWindow, text='Registrar', command=query_registrar)
+    bt_query_registrar.grid(row=3, column=1)
+
+#FUNÇÃO PARA DELETAR LIVROS
+def deletar():
+    newWindow_delete = Toplevel(root)
+    newWindow_delete.title("Exclusão")
+    newWindow_delete.geometry("300x300")
+
+    # entry
+    entry_id_livro_delete = Entry(newWindow_delete, width=30)
+    entry_id_livro_delete.grid(row=0, column=1, padx=20)
+
+
+    # label
+    lab_id_livro_delete = Label(newWindow_delete, text='ID do livro')
+    lab_id_livro_delete.grid(row=0, column=0)
+
+    def query_deletar():
+         conn = sqlite3.connect('dados.db')
+         c = conn.cursor()
+         c.execute('DELETE FROM livros WHERE id_livro = ' + entry_id_livro_delete.get())
+         conn.commit()
+         conn.close()
+
+         entry_id_livro_delete.delete(0, END)
+
+    bt_query_deletar = Button(newWindow_delete, text='Deletar', command=query_deletar)
+    bt_query_deletar.grid(row=1, column=1)
+#================================FRAMES================================ 
+
+#MAINFRAME
+MainFrame = Frame(root)
+MainFrame.pack()
+MainFrame.config(bg='#a4dfd1')
+
+#FRAME DE TITULO
+FrameTitulo = Frame(MainFrame,
+                    bg='#cc6666',
+                    bd=10,
+                    width=1350,
+                    pady=20,
+                    relief = RIDGE)
+FrameTitulo.pack(side=TOP)
+
+Titulo = Label(FrameTitulo,
+               width=34,
+               text='Sistema de Biblioteca',
+               bg='#cc6666',
+               font=('arial', 47, 'bold'))
+Titulo.pack()
+
+#FRAME DE DETALHES DE EMPRÉSTIMOS (DADOS DE ALUNO E LIVRO)
+FrameDetalhe = Frame(MainFrame,
+                        bg='#a4dfd1',
+                        bd=10,
+                        width=1350,
+                        height=100,
+                        padx=20,
+                        relief = RIDGE)
+FrameDetalhe.pack(side=BOTTOM)
+
+#DATAFRAME
+DataFrame = Frame(MainFrame,
+                    bg='#a4dfd1',
+                    bd=10,
+                    width=1300,
+                    height=400,
+                    padx=20,
+                    relief = RIDGE)
+DataFrame.pack(side=BOTTOM)
+
+#DATAFRAME NA ESQUERDA (ONDE OS DADOS DOS ALUNOS SERÃO MOSTRADOS)
+DataFrameLEFT = LabelFrame(DataFrame,
+                            bg='#a4dfd1',
+                            bd=10,
+                            width=700,
+                            height=300,
+                            padx=20,
+                            relief = RIDGE,
+                            font=('arial', 12, 'bold'),
+                            text='Informação do Empréstimo')
+DataFrameLEFT.pack(side=LEFT)
+
+#DATAFRAME NA DIREITA (ONDE OS LIVROS VÃO SER MOSTRADOS)
+DataFrameRIGHT = LabelFrame(DataFrame,
+                            bg='#a4dfd1',
+                            bd=10,
+                            width=550,
+                            height=300,
+                            padx=20,
+                            relief = RIDGE,
+                            font=('arial', 12, 'bold'),
+                            text='Livros')
+DataFrameRIGHT.pack(side=RIGHT)
+
+#============================DATAFRAME_LEFT_ALUNOS================================ 
+
+#LABEL E ENTRY DE ID ALUNO
+label_id_aluno = Label(DataFrameLEFT,
+                       text='RA',
+                       font=('arial', 12, 'bold'),
+                       bg='#a4dfd1',
+                       padx=2,
+                       pady=2)
+label_id_aluno.pack()
+label_id_aluno.place(x=10,y=50)
+
+entry_id_aluno = Entry(DataFrameLEFT,
+                       font=('arial', 12, 'bold'))
+entry_id_aluno.pack()
+entry_id_aluno.place(x=140, y=50)
+
+#LABEL E ENTRY DE NOME ALUNO
+
+label_nome = Label(DataFrameLEFT,
+                       text='Nome do aluno',
+                       font=('arial', 12, 'bold'),
+                       bg='#a4dfd1',
+                       padx=2,
+                       pady=2)
+label_nome.pack()
+label_nome.place(x=10, y=100)
+
+entry_nome = Entry(DataFrameLEFT,
+                       font=('arial', 12, 'bold'))
+entry_nome.pack()
+entry_nome.place(x=140, y=100)
+
+
+#LABEL E ENTRY DE ALUNO TURMA
+
+label_turma = Label(DataFrameLEFT,
+                       text='Turma',
+                       font=('arial', 12, 'bold'),
+                       bg='#a4dfd1',
+                       padx=2,
+                       pady=2)
+label_turma.pack()
+label_turma.place(x=10, y=150)
+
+entry_turma = Entry(DataFrameLEFT,
+                       font=('arial', 12, 'bold'))
+entry_turma.pack()
+entry_turma.place(x=140, y=150)
+
+
+
+#================================DATAFRAME_LEFT_LIVROS================================
+
+#LABEL E ENTRY DE ID LIVRO
+label_id_livro = Label(DataFrameLEFT,
+                       text='ID do livro',
+                       font=('arial', 12, 'bold'),
+                       bg='#a4dfd1',
+                       padx=2,
+                       pady=2)
+label_id_livro.pack()
+label_id_livro.place(x=350, y=50)
+
+entry_id_livro = Entry(DataFrameLEFT,
+                       font=('arial', 12, 'bold'))
+entry_id_livro.pack()
+entry_id_livro.place(x=450, y=50)
+
+
+#================================DATAFRAME_RIGHT============================
+#criar uma tabela treeview mostrando todos os livros
+tree = ttk.Treeview(DataFrameRIGHT, show='headings', height=12)
+
+tree['columns'] = ('ID do livro', 'Nome do livro', 'Autor')
+
+tree.column('#0', width=0, stretch=0, anchor=CENTER)
+tree.column('ID do livro', anchor=W, width=70)
+tree.column('Nome do livro', anchor=W, width=230)
+tree.column('Autor', anchor=CENTER, width=150)
+
+tree.heading('#0', text='', anchor=CENTER)
+tree.heading('ID do livro', text='ID do livro', anchor=W)
+tree.heading('Nome do livro', text='Nome do livro', anchor=W)
+tree.heading('Autor', text='Autor', anchor=CENTER)
+
+tree.pack(side='left')
+
+#adicionar um scrollbar para a tabela tree
+treeScroll = ttk.Scrollbar(DataFrameRIGHT)
+treeScroll.configure(command=tree.yview)
+tree.configure(yscrollcommand=treeScroll.set)
+treeScroll.pack(side='right', fill='y')
+
+#================================FRAME_DETALHE================================
+TextoDetalhe = Text(FrameDetalhe,
+                    font=('arial', 12, 'bold'),
+                    width=141,
+                    height=4,
+                    padx=2,
+                    pady=4)
+TextoDetalhe.grid(row=1, column=0)
+
+
+#================================FRAME_BOTAO==================================
+
+#BOTÃO PARA ADICIONAR REGISTRO DE EMPRÉSTIMO DE LIVRO POR ALUNO NO FRAME DETALHE
+botao_adicionar = Button(
+                         text='Adicionar',
+                         font=('arial', 20, 'bold'),
+                         width=15,
+                         bd=5,
+                         relief = RAISED,
+                         command=adicionar
+                         )
+botao_adicionar.pack()
+botao_adicionar.place(x=100, y=600)
+
+#BOTÃO PARA MOSTRAR DADOS DO FRAME DE DETALHE E NO FRAME RIGHT (LIVROS)
+botao_mostrar_dados = Button(
+                       text='Mostrar Dados',
+                       font=('arial', 20, 'bold'),
+                       width=15,
+                       bd=5,
+                       relief = RAISED,
+                       command=mostrar_dados
+                         )
+botao_mostrar_dados.pack()
+botao_mostrar_dados.place(x=400, y=600)
+
+
+#BOTÃO PARA REGISTRAR NOVOS LIVROS NA DATABASE
+botao_registrar = Button(
+                         text='Registrar',
+                         font=('arial', 20, 'bold'),
+                         width=15,
+                         bd=5,
+                         relief = RAISED,
+                         command=registrar
+                         )
+botao_registrar.pack()
+botao_registrar.place(x=700, y=600)
+
+
+#BOTÃO PARA DELETAR LINHAS
+botao_deletar = Button(
+                       text='Deletar',
+                       font=('arial', 20, 'bold'),
+                       width=15,
+                       bd=5,
+                       relief = RAISED,
+                       command=deletar
+                         )
+botao_deletar.pack()
+botao_deletar.place(x=1000, y=600)
+
+
+
+
+root.mainloop()
