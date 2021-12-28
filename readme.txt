@@ -8,4 +8,4 @@ Escrito em Python, necessário instalar o pacote tkinter do python para rodar o 
 Esse programa é um sistema de gerenciamento de biblioteca de uma escola, em que alunos pegam livros emprestados e esses empréstimos são registrados no sistema. Também serve para armazenar dados dos livros da biblioteca num banco de dados.
 Para mais detalhes, acessar o arquivo slide.pptx.
 
-*Obs: o arquivos dados.db PRECISA estar na mesma pasta que dashFatec.pu 
+*Obs: o arquivos dados.db e save.json PRECISAM estar na mesma pasta que dashFatec.py 
